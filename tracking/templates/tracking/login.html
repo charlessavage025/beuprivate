@@ -1,0 +1,22 @@
+{% extends "tracking/base.html" %}
+{% block title %}Staff Login — SwiftTrack{% endblock %}
+{% block content %}
+<div class="card" style="max-width:400px; margin:2rem auto;">
+    <h1>Staff Login</h1>
+    {% if form.errors %}
+        <div class="error-msg">Invalid username or password.</div>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <div class="field">
+            <label for="{{ form.username.id_for_label }}">Username</label>
+            {{ form.username }}
+        </div>
+        <div class="field">
+            <label for="{{ form.password.id_for_label }}">Password</label>
+            {{ form.password }}
+        </div>
+        <button class="btn" type="submit">Log in</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,211 @@
+{% extends "tracking/base.html" %}
+{% block title %}New Shipment — SwiftTrack{% endblock %}
+{% block content %}
+<div class="page-head">
+    <a href="{% url 'staff_dashboard' %}" class="back-link">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg>
+        Staff dashboard
+    </a>
+    <h1 style="margin-top:0.5rem;">Create a new shipment</h1>
+    <p class="muted" style="margin:0;">Every detail is entered by hand here — sender, recipient, and the exact hubs this package will travel through.</p>
+</div>
+
+<form method="post" class="card shipment-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+        <div class="error-msg">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <div class="form-section">
+        <div class="section-head">
+            <span class="section-icon">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>
+            </span>
+            <div>
+                <h3 style="margin:0;">Sender</h3>
+                <p class="section-sub">Who's shipping this package</p>
+            </div>
+        </div>
+        <div class="grid-2">
+            {% for field in form %}
+                {% if field.name|slice:":7" == "sender_" %}
+                    <div class="field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<span class="error-msg">{{ field.errors }}</span>{% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-head">
+            <span class="section-icon">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/><path d="M10 20v-5h4v5"/></svg>
+            </span>
+            <div>
+                <h3 style="margin:0;">Recipient</h3>
+                <p class="section-sub">Where the package is headed</p>
+            </div>
+        </div>
+        <div class="grid-2">
+            {% for field in form %}
+                {% if field.name|slice:":10" == "recipient_" %}
+                    <div class="field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<span class="error-msg">{{ field.errors }}</span>{% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-head">
+            <span class="section-icon">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+            </span>
+            <div>
+                <h3 style="margin:0;">Package details</h3>
+                <p class="section-sub">Service level, size, and value</p>
+            </div>
+        </div>
+        <div class="grid-2">
+            {% for field in form %}
+                {% if field.name == "service_level" or field.name == "weight_kg" or field.name == "dimensions" or field.name == "declared_value" %}
+                    <div class="field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<span class="error-msg">{{ field.errors }}</span>{% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-head">
+            <span class="section-icon">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s7-7.5 7-12a7 7 0 1 0-14 0c0 4.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.4"/></svg>
+            </span>
+            <div>
+                <h3 style="margin:0;">Route</h3>
+                <p class="section-sub">The exact hubs this shipment will move through, in order</p>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            {% for field in form %}
+                {% if field.name == "origin" or field.name == "destination" %}
+                    <div class="field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<span class="error-msg">{{ field.errors }}</span>{% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="field">
+            <label for="{{ form.stops.id_for_label }}">{{ form.stops.label }}</label>
+            {{ form.stops }}
+            {% if form.stops.help_text %}<span class="muted" style="font-size:0.8rem;">{{ form.stops.help_text }}</span>{% endif %}
+            {% if form.stops.errors %}<span class="error-msg">{{ form.stops.errors }}</span>{% endif %}
+        </div>
+
+        <div id="route-preview" class="route-preview">
+            <span class="muted" style="font-size:0.82rem;">Fill in origin and destination to preview the route.</span>
+        </div>
+    </div>
+
+    <button class="btn accent" type="submit">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        Create shipment
+    </button>
+</form>
+
+<style>
+    .page-head { margin-bottom: 1.25rem; }
+    .back-link {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        font-size: 0.85rem; font-weight: 600; color: var(--gray-500);
+        text-decoration: none;
+    }
+    .back-link:hover { color: var(--purple); }
+
+    .shipment-form { display: flex; flex-direction: column; }
+    .form-section { padding: 1.5rem 0; border-top: 1px solid var(--border); }
+    .form-section:first-child { padding-top: 0; border-top: none; }
+    .section-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.1rem; }
+    .section-icon {
+        flex-shrink: 0; width: 38px; height: 38px; border-radius: var(--radius-sm);
+        background: var(--purple-tint); color: var(--purple);
+        display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    }
+    .section-sub { margin: 0.1rem 0 0; font-size: 0.8rem; color: var(--gray-500); }
+
+    .route-preview {
+        display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem;
+        margin-top: 1rem; padding: 0.9rem 1rem;
+        background: var(--gray-100); border: 1px dashed var(--gray-300); border-radius: var(--radius);
+        min-height: 3rem;
+    }
+    .route-chip {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        background: var(--card); border: 1px solid var(--gray-300);
+        padding: 0.3rem 0.7rem; border-radius: 999px;
+        font-size: 0.8rem; font-weight: 600; color: var(--gray-900);
+    }
+    .route-chip.endpoint { background: var(--purple); border-color: var(--purple); color: #fff; }
+    .route-chip .icon { font-size: 0.85rem; color: var(--gray-500); }
+    .route-chip.endpoint .icon { color: rgba(255,255,255,0.8); }
+    .route-arrow { color: var(--gray-300); flex-shrink: 0; }
+
+    .shipment-form > .btn { align-self: flex-start; margin-top: 0.5rem; }
+</style>
+
+<script>
+    (function () {
+        var originInput = document.getElementById("{{ form.origin.id_for_label }}");
+        var destInput = document.getElementById("{{ form.destination.id_for_label }}");
+        var stopsInput = document.getElementById("{{ form.stops.id_for_label }}");
+        var preview = document.getElementById("route-preview");
+        if (!originInput || !destInput || !stopsInput || !preview) return;
+
+        var pinIcon = '<svg class="icon" viewBox="0 0 24 24"><path d="M12 22s7-7.5 7-12a7 7 0 1 0-14 0c0 4.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.4"/></svg>';
+        var arrow = '<svg class="icon route-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>';
+
+        function chip(text, isEndpoint) {
+            return '<span class="route-chip' + (isEndpoint ? ' endpoint' : '') + '">' + pinIcon + text + '</span>';
+        }
+
+        function render() {
+            var origin = originInput.value.trim();
+            var destination = destInput.value.trim();
+            var stops = stopsInput.value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+
+            if (!origin && !destination && stops.length === 0) {
+                preview.innerHTML = '<span class="muted" style="font-size:0.82rem;">Fill in origin and destination to preview the route.</span>';
+                return;
+            }
+
+            var parts = [];
+            if (origin) parts.push(chip(origin, true));
+            stops.forEach(function (s) { parts.push(chip(s, false)); });
+            if (destination) parts.push(chip(destination, true));
+
+            preview.innerHTML = parts.join(arrow);
+        }
+
+        [originInput, destInput, stopsInput].forEach(function (el) {
+            el.addEventListener("input", render);
+        });
+        render();
+    })();
+</script>
+{% endblock %}

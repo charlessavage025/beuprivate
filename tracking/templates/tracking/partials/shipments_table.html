@@ -1,0 +1,21 @@
+<div id="shipments-table">
+    <table>
+        <thead>
+            <tr>
+                <th>Tracking #</th>
+                <th>Status</th>
+                <th>Current location</th>
+                <th>Service</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for shipment in shipments %}
+            {% include "tracking/partials/shipment_row.html" %}
+        {% empty %}
+            <tr><td colspan="6" class="muted">No shipments match this filter.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

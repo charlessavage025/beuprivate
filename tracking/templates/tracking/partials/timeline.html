@@ -1,0 +1,103 @@
+<div id="timeline-block"
+     {% if not is_delivered %}
+     hx-get="{% url 'track_timeline' shipment.tracking_number %}"
+     hx-trigger="every 15s"
+     hx-swap="outerHTML"
+     {% endif %}>
+
+    <div class="card status-card">
+        <div class="status-text {% if shipment.status == 'DELIVERED' %}is-delivered{% elif is_delayed %}is-delayed{% endif %}">
+            {{ shipment.get_status_display }}
+        </div>
+        {% if is_delayed %}
+            <div class="delay-reason-note">{{ shipment.latest_event.delay_reason|default:"No reason given" }}</div>
+        {% endif %}
+
+        {% if is_delivered %}
+            <div class="meta-line">
+                Delivered {{ shipment.delivered_at|date:"M j, Y, g:i a" }}{% if shipment.signed_by %} · Signed by {{ shipment.signed_by }}{% endif %}
+            </div>
+        {% else %}
+            <div class="meta-line {% if shipment.is_overdue %}is-overdue{% endif %}">
+                ETA {{ shipment.estimated_delivery|default:"—" }}{% if shipment.is_overdue %} · overdue{% endif %}
+            </div>
+        {% endif %}
+        <div class="meta-line service-line">{{ shipment.get_service_level_display }} shipping</div>
+    </div>
+
+    <div class="card history-card">
+        <h3>Tracking history</h3>
+        <ol class="event-timeline">
+            {% for event in events %}
+                <li class="event-item {% if event.event_type == 'DELIVERED' %}is-delivered{% elif event.event_type == 'DELAYED' %}is-delayed{% endif %}">
+                    <span class="event-dot">
+                        {% if event.event_type == 'LABEL_CREATED' %}
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+                        {% elif event.event_type == 'PICKED_UP' or event.event_type == 'DEPARTED_FACILITY' %}
+                            <svg class="icon" viewBox="0 0 24 24"><rect x="1" y="7" width="13" height="10" rx="1"/><path d="M14 10h4l3 3v4h-7"/><circle cx="6" cy="19" r="1.6"/><circle cx="17" cy="19" r="1.6"/></svg>
+                        {% elif event.event_type == 'ARRIVED_AT_FACILITY' %}
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s7-7.5 7-12a7 7 0 1 0-14 0c0 4.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.4"/></svg>
+                        {% elif event.event_type == 'OUT_FOR_DELIVERY' %}
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/><path d="M10 20v-5h4v5"/></svg>
+                        {% elif event.event_type == 'DELIVERED' %}
+                            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 5-5"/></svg>
+                        {% else %}
+                            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5h.01"/></svg>
+                        {% endif %}
+                    </span>
+                    <div class="event-body">
+                        <div class="event-head">
+                            <span class="event-title">{{ event.get_event_type_display }}</span>
+                            <time class="event-time">{{ event.timestamp }}</time>
+                        </div>
+                        {% if event.location or event.location_note %}
+                            <div class="event-location">{{ event.location|default:event.location_note }}</div>
+                        {% endif %}
+                        <p class="event-desc">{{ event.description }}</p>
+                        {% if event.delay_reason %}
+                            <p class="event-reason">{{ event.delay_reason }}</p>
+                        {% endif %}
+                    </div>
+                </li>
+            {% empty %}
+                <li class="muted" style="list-style:none;">No events yet.</li>
+            {% endfor %}
+        </ol>
+    </div>
+</div>
+
+<style>
+    .status-card { margin-bottom: 1rem; }
+    .status-text { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.01em; color: var(--purple); }
+    .status-text.is-delivered { color: var(--success); }
+    .status-text.is-delayed { color: var(--warning); }
+    .delay-reason-note { margin-top: 0.3rem; font-size: 0.88rem; font-weight: 600; color: var(--warning); }
+    .meta-line { margin-top: 0.7rem; font-size: 0.92rem; color: var(--gray-700); }
+    .meta-line.is-overdue { color: var(--warning); font-weight: 600; }
+    .meta-line.service-line { margin-top: 0.3rem; color: var(--gray-500); font-size: 0.85rem; }
+
+    .history-card h3 { margin-bottom: 1.25rem; }
+    .event-timeline { list-style: none; margin: 0; padding: 0; }
+    .event-item { display: flex; gap: 0.9rem; position: relative; padding-bottom: 1.5rem; }
+    .event-item:last-child { padding-bottom: 0; }
+    .event-item:not(:last-child)::before {
+        content: ""; position: absolute; left: 15px; top: 34px; bottom: 0; width: 2px; background: var(--gray-200);
+    }
+    .event-dot {
+        flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--purple-tint); color: var(--purple); font-size: 0.9rem; z-index: 1;
+    }
+    .event-item.is-delivered .event-dot { background: var(--success-bg); color: var(--success); }
+    .event-item.is-delayed .event-dot { background: var(--warning-bg); color: var(--warning); }
+    .event-body { flex: 1; padding-top: 0.2rem; min-width: 0; }
+    .event-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+    .event-title { font-weight: 700; font-size: 0.92rem; }
+    .event-time { font-size: 0.78rem; color: var(--gray-500); white-space: nowrap; }
+    .event-location { font-size: 0.82rem; color: var(--gray-700); margin-top: 0.15rem; }
+    .event-desc { margin: 0.25rem 0 0; font-size: 0.85rem; color: var(--gray-500); }
+    .event-reason {
+        margin: 0.45rem 0 0; padding-left: 0.6rem; border-left: 2px solid var(--warning);
+        font-size: 0.85rem; color: var(--warning); font-weight: 600;
+    }
+</style>

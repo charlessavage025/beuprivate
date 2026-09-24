@@ -1,0 +1,13 @@
+{% extends "tracking/base.html" %}
+{% block title %}Staff Dashboard — SwiftTrack{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h1>Staff Dashboard</h1>
+    <div>
+        <a class="btn" href="{% url 'staff_shipment_new' %}">New shipment</a>
+        <a class="btn secondary" href="{% url 'staff_scan' %}">Manual scan</a>
+    </div>
+</div>
+
+{% include "tracking/partials/dashboard_content.html" %}
+{% endblock %}

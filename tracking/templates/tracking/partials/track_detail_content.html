@@ -1,0 +1,55 @@
+<div class="card">
+    <div class="track-header">
+        <div>
+            <span class="muted" style="font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Tracking number</span>
+            <div class="tn-row">
+                <h1 style="margin:0;">{{ shipment.tracking_number }}</h1>
+                <button type="button" class="copy-btn" data-tracking="{{ shipment.tracking_number }}" title="Copy tracking number">
+                    Copy
+                </button>
+            </div>
+        </div>
+        <div class="route-summary">
+            <span>{{ shipment.sender_city }}, {{ shipment.sender_state }}</span>
+            <span class="route-arrow">&rarr;</span>
+            <span>{{ shipment.recipient_city }}, {{ shipment.recipient_state }}</span>
+        </div>
+    </div>
+</div>
+
+{% include "tracking/partials/timeline.html" %}
+
+<style>
+    .track-header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; }
+    .tn-row { display: flex; align-items: center; gap: 0.6rem; }
+    .tn-row h1 { letter-spacing: -0.01em; font-size: 1.65rem; }
+    .copy-btn {
+        display: flex; align-items: center; justify-content: center;
+        padding: 0.3rem 0.65rem; border-radius: var(--radius-sm);
+        border: 1px solid var(--gray-300); background: var(--card); color: var(--gray-500);
+        font-size: 0.78rem; font-weight: 600; font-family: inherit;
+        cursor: pointer; transition: all 0.15s ease;
+    }
+    .copy-btn:hover { color: var(--purple); border-color: var(--purple); background: var(--purple-tint); }
+    .copy-btn.copied { color: var(--success); border-color: var(--success); background: var(--success-bg); }
+    .route-summary { display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; font-weight: 600; color: var(--gray-700); }
+    .route-arrow { color: var(--gray-300); }
+</style>
+<script>
+    document.querySelectorAll(".copy-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var value = btn.getAttribute("data-tracking");
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(value).then(function () {
+                    var original = btn.textContent;
+                    btn.classList.add("copied");
+                    btn.textContent = "Copied";
+                    setTimeout(function () {
+                        btn.classList.remove("copied");
+                        btn.textContent = original;
+                    }, 1500);
+                });
+            }
+        });
+    });
+</script>

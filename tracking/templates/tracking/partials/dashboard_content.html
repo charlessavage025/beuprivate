@@ -1,0 +1,32 @@
+{% load tracking_extras %}
+<div id="dashboard-content">
+    <div class="card" id="status-counts">
+        <strong>Total:</strong> {{ total_count }}
+        {% for status_value, status_label in status_choices %}
+            &nbsp;|&nbsp; {{ status_label }}: {{ counts_map|get_item:status_value }}
+        {% endfor %}
+    </div>
+
+    <div class="filters">
+        <a class="btn small {% if not selected_status %}secondary{% endif %}"
+           hx-get="{% url 'staff_dashboard' %}" hx-target="#shipments-table" hx-swap="outerHTML" hx-push-url="true">
+            All
+        </a>
+        {% for status_value, status_label in status_choices %}
+            <a class="btn small {% if selected_status == status_value %}secondary{% endif %}"
+               hx-get="{% url 'staff_dashboard' %}?status={{ status_value }}"
+               hx-target="#shipments-table" hx-swap="outerHTML" hx-push-url="true">
+                {{ status_label }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <button class="btn" hx-post="{% url 'staff_advance_all' %}{% if selected_status %}?status={{ selected_status }}{% endif %}"
+            hx-target="#dashboard-content" hx-swap="outerHTML">
+        Advance all in-transit
+    </button>
+
+    <div class="card" style="margin-top:1rem;">
+        {% include "tracking/partials/shipments_table.html" %}
+    </div>
+</div>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SwiftTrack{% endblock %}</title>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --purple: #4d148c;
+            --purple-dark: #2e0a56;
+            --purple-tint: #f4eefb;
+            --orange: #ff6200;
+            --orange-dark: #d84e00;
+
+            --ink: #1c1824;
+            --gray-900: #211d29;
+            --gray-700: #514a5c;
+            --gray-500: #7c7488;
+            --gray-300: #ddd6e3;
+            --gray-200: #ece7f0;
+            --gray-100: #f7f4f8;
+            --white: #ffffff;
+
+            --success: #0b7a3b;
+            --success-bg: #e7f6ec;
+            --warning: #b45309;
+            --warning-bg: #fdf1e0;
+            --danger: #b3261e;
+            --danger-bg: #fbeae9;
+
+            --radius-sm: 6px;
+            --radius: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 2px rgba(20, 15, 40, 0.06);
+            --shadow-md: 0 8px 24px -8px rgba(20, 15, 40, 0.16);
+            --border: var(--gray-200);
+            --bg: var(--gray-100);
+            --card: var(--white);
+            --text: var(--gray-900);
+            --muted: var(--gray-500);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --purple-tint: #251a34;
+                --ink: #f2eff5;
+                --gray-900: #f2eff5;
+                --gray-700: #cac3d1;
+                --gray-500: #968ea3;
+                --gray-300: #3c3547;
+                --gray-200: #2c2635;
+                --gray-100: #18141d;
+                --white: #221d2b;
+                --success-bg: #10301d;
+                --warning-bg: #3a2408;
+                --danger-bg: #3a1614;
+                --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+                --shadow-md: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+            }
+        }
+
+        * { box-sizing: border-box; }
+        html { -webkit-font-smoothing: antialiased; }
+        body {
+            font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+        a { color: inherit; }
+        h1, h2, h3 { font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.75rem; }
+        h1 { font-size: 1.5rem; }
+        h2 { font-size: 1.125rem; }
+        h3 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--gray-700); }
+        svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.14em; flex-shrink: 0; }
+
+        header.site {
+            background: var(--purple);
+            color: #fff;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 58px;
+            border-bottom: 3px solid var(--orange);
+        }
+        header.site a { text-decoration: none; }
+        header.site .brand {
+            font-weight: 700; font-size: 1.2rem; letter-spacing: -0.02em;
+            color: #fff;
+        }
+        header.site .brand .accent { color: var(--orange); }
+        header.site nav { display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0; }
+        header.site nav a {
+            font-size: 0.86rem; font-weight: 600; color: rgba(255,255,255,0.88);
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        header.site nav a:hover { color: #fff; }
+        header.site nav a .short { display: none; }
+
+        main { max-width: 980px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.45rem;
+            background: var(--purple);
+            color: #fff;
+            border: 1px solid var(--purple);
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 1.1rem;
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+        }
+        .btn:hover { background: var(--purple-dark); border-color: var(--purple-dark); }
+        .btn:active { transform: translateY(1px); }
+        .btn.accent { background: var(--orange); border-color: var(--orange); }
+        .btn.accent:hover { background: var(--orange-dark); border-color: var(--orange-dark); }
+        .btn.secondary { background: transparent; color: var(--gray-900); border-color: var(--gray-300); }
+        .btn.secondary:hover { background: var(--gray-100); border-color: var(--gray-500); }
+        .btn.warning { background: transparent; color: var(--warning); border-color: var(--warning); }
+        .btn.warning:hover { background: var(--warning-bg); }
+        .btn.small { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+        .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+
+        input, select, textarea {
+            padding: 0.6rem 0.7rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: var(--card);
+            color: var(--text);
+            width: 100%;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: var(--purple);
+            box-shadow: 0 0 0 3px rgba(77, 20, 140, 0.12);
+        }
+        textarea { resize: vertical; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 0.65rem 0.7rem; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+        th { color: var(--gray-500); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.04em; }
+        tbody tr:hover { background: var(--gray-100); }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            background: var(--purple-tint);
+            color: var(--purple);
+        }
+        .badge.delivered { background: var(--success-bg); color: var(--success); }
+        .badge.delayed { background: var(--warning-bg); color: var(--warning); }
+
+        .muted { color: var(--muted); }
+        .messages { list-style: none; padding: 0; }
+        .messages li { padding: 0.65rem 0.9rem; border-radius: var(--radius-sm); background: var(--success-bg); color: var(--success); margin-bottom: 0.5rem; font-size: 0.88rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .field { margin-bottom: 0.9rem; display: flex; flex-direction: column; gap: 0.3rem; }
+        .field label { font-size: 0.8rem; font-weight: 600; color: var(--gray-700); }
+        .field .muted { font-size: 0.78rem; }
+        .filters { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+        .filters a { text-decoration: none; }
+        .success-msg { display: flex; align-items: center; gap: 0.5rem; background: var(--success-bg); color: var(--success); padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.88rem; font-weight: 600; }
+        .error-msg { display: flex; align-items: center; gap: 0.5rem; background: var(--danger-bg); color: var(--danger); padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.88rem; font-weight: 600; }
+
+        @media (max-width: 820px) {
+            header.site { padding: 0 1rem; }
+            header.site .brand { font-size: 1.05rem; }
+            header.site nav { gap: 1rem; }
+            header.site nav a { font-size: 0.8rem; }
+        }
+        @media (max-width: 640px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            main { padding: 1.25rem 1rem 2rem; }
+            .card { padding: 1.1rem; }
+        }
+        @media (max-width: 560px) {
+            header.site nav a .full { display: none; }
+            header.site nav a .short { display: inline; }
+        }
+    </style>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <header class="site">
+        <a class="brand" href="{% url 'index' %}">
+            Swift<span class="accent">Track</span>
+        </a>
+        <nav>
+            <a href="{% url 'index' %}"><span class="full">Track a package</span><span class="short">Track</span></a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'staff_dashboard' %}"><span class="full">Staff dashboard</span><span class="short">Staff</span></a>
+                <a href="{% url 'logout' %}">Log out</a>
+            {% else %}
+                <a href="{% url 'login' %}"><span class="full">Staff login</span><span class="short">Login</span></a>
+            {% endif %}
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
