@@ -49,7 +49,6 @@ urlpatterns = [
         name="staff_delete_shipment_row",
     ),
     path("staff/advance-all/", views.staff_advance_all, name="staff_advance_all"),
-    path("setup/", views.setup_page, name="setup_page"),
     path(
         "accounts/login/",
         auth_views.LoginView.as_view(template_name="tracking/login.html"),

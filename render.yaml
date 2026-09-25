@@ -30,7 +30,5 @@ services:
         sync: false
       - key: ADMIN_URL
         sync: false
-      - key: SETUP_TOKEN
-        generateValue: true
       - key: PYTHON_VERSION
         value: "3.12.6"

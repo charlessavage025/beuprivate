@@ -42,11 +42,6 @@ CSRF_TRUSTED_ORIGINS = [
 # override via env var if you want a different obscure path per deploy.
 ADMIN_URL = os.environ.get("ADMIN_URL", "staff-a044f23eaa1d9efe")
 
-# Gates the /setup/ page (create a superuser / run seed_demo without shell
-# access, e.g. on Render's free tier). Left blank, that page 404s — set this
-# to enable it, and treat the resulting URL as a secret.
-SETUP_TOKEN = os.environ.get("SETUP_TOKEN", "")
-
 # Render (and most PaaS hosts) terminate TLS at a proxy and forward requests
 # to the app over plain HTTP, tagging the original scheme in this header —
 # without it, request.is_secure() is always False behind the proxy, which
