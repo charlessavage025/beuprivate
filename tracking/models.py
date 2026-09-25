@@ -56,6 +56,7 @@ class Shipment(models.Model):
 
     recipient_name = models.CharField(max_length=255)
     recipient_phone = models.CharField(max_length=32)
+    recipient_email = models.EmailField(blank=True)
     recipient_line1 = models.CharField(max_length=255)
     recipient_line2 = models.CharField(max_length=255, blank=True)
     recipient_city = models.CharField(max_length=128)

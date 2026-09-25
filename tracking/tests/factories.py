@@ -5,7 +5,7 @@ DEFAULT_SERVICE_LEVEL = ServiceLevel.GROUND
 
 
 def address_fields(prefix, name="Ada Okafor", city="Lagos", state="Lagos"):
-    return {
+    fields = {
         f"{prefix}_name": name,
         f"{prefix}_phone": "+2348000000000",
         f"{prefix}_line1": "1 Test Street",
@@ -14,6 +14,9 @@ def address_fields(prefix, name="Ada Okafor", city="Lagos", state="Lagos"):
         f"{prefix}_postal_code": "100001",
         f"{prefix}_country": "Nigeria",
     }
+    if prefix == "recipient":
+        fields["recipient_email"] = "recipient@example.com"
+    return fields
 
 
 def make_shipment(

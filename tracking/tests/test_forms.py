@@ -13,6 +13,7 @@ def _base_form_data(origin, destination, **extra):
         "sender_country": "Nigeria",
         "recipient_name": "Chidi Obi",
         "recipient_phone": "+2348022222222",
+        "recipient_email": "chidi.obi@example.com",
         "recipient_line1": "2 Test Street",
         "recipient_city": "Abuja",
         "recipient_state": "FCT",

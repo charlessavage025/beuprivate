@@ -15,6 +15,7 @@ class ShipmentCreateForm(forms.Form):
 
     recipient_name = forms.CharField(max_length=255, label="Recipient name")
     recipient_phone = forms.CharField(max_length=32, label="Recipient phone")
+    recipient_email = forms.EmailField(label="Recipient email")
     recipient_line1 = forms.CharField(max_length=255, label="Recipient address")
     recipient_line2 = forms.CharField(max_length=255, required=False)
     recipient_city = forms.CharField(max_length=128)

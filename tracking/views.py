@@ -168,6 +168,7 @@ def staff_shipment_new(request):
                 sender_country=data["sender_country"],
                 recipient_name=data["recipient_name"],
                 recipient_phone=data["recipient_phone"],
+                recipient_email=data["recipient_email"],
                 recipient_line1=data["recipient_line1"],
                 recipient_line2=data["recipient_line2"],
                 recipient_city=data["recipient_city"],

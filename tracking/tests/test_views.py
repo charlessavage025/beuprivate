@@ -299,6 +299,7 @@ class StaffViewTests(TestCase):
                 "sender_country": "Nigeria",
                 "recipient_name": "Fatima Bello",
                 "recipient_phone": "+2348044444444",
+                "recipient_email": "fatima.bello@example.com",
                 "recipient_line1": "7 Ahmadu Bello Way",
                 "recipient_line2": "",
                 "recipient_city": "Kaduna",
