@@ -60,18 +60,29 @@ the demo data has variety without requiring 20+ manual entries.)
    - **Rewind** — undoes the shipment's latest scan, moving it back one step. Works even on a delivered shipment, to undo an accidental delivery. Disabled once there's nothing left to undo.
    - **Flag delay** — prompts for a reason, then marks the shipment `DELAYED` and logs that reason on the event, independent of the random delay `advance()` sometimes rolls on its own. Hidden once delivered.
    - **Run to delivery** — repeatedly advances a single shipment until it's delivered.
+   - **Email: On/Off** — mutes or unmutes email notifications for that one shipment (see "Email notifications" below).
+   - **Delete** — permanently removes the shipment and its whole tracking history, after a confirmation prompt.
    - **Advance all in-transit** (dashboard-wide button) — advances every non-delivered shipment by one step.
-2. **Manual staff scan** (`/staff/scan/`) — staff pick the event type, type in a location/facility name, location note, and (required when the event type is "Delayed") a delay reason; can optionally backdate the timestamp.
-3. **Management command**:
+2. **Management command**:
    ```bash
    python manage.py simulate_scan <tracking_number> [--steps N]
    python manage.py simulate_scan --all
    ```
    Runs once and exits — no loop, no daemon.
 
+## Email notifications
+
+Every new tracking event emails the recipient a branded status update (HTML +
+plain-text), unless that shipment's notifications are muted from its
+dashboard row. See `.env.example` for SMTP setup — with no `EMAIL_HOST` set,
+emails just print to the console instead of sending, so no credentials are
+needed for local dev.
+
 ## Login
 
-Staff-only pages (`/staff/...`) require a logged-in user with `is_staff=True`. Log in at `/accounts/login/` with `admin` / `admin123` after seeding (or via `python manage.py createsuperuser`).
+Staff-only pages (`/staff/...`) require a logged-in user with `is_staff=True`. Log in at `/accounts/login/` with `admin` / `admin123` after seeding (or via `python manage.py createsuperuser`). Staff can change their own password at `/accounts/password-change/` (linked from the dashboard).
+
+Django admin lives at `/<ADMIN_URL>/` instead of the guessable `/admin/` — see `ADMIN_URL` in `.env.example`/`settings.py`.
 
 ## Running tests
 
@@ -136,9 +147,10 @@ free tier, not a bug.
 4. Find the same shipment in the staff table and click **Advance**. Its row updates immediately.
 5. Switch back to the first tab — within 15 seconds the public tracking page polls `/track/<tn>/timeline/` and shows the new status without a refresh.
 6. Back on the staff dashboard, click **Rewind** on that same row — it undoes the step you just advanced, and the public tab reflects that on its next poll too.
-7. Click **Flag delay** on an in-transit shipment, type in a reason when prompted — it's marked `DELAYED` immediately, with that reason visible in its tracking history; click **Advance** again to resume its normal flow.
-8. Go to **Manual scan** (`/staff/scan/`). Submit a scan for a tracking number with an event type that's *earlier* than its current status and a backdated timestamp — submit, then reload the tracking page and confirm the status badge did **not** move backwards (TrackingEvent is the source of truth; the shipment always reflects whichever event has the latest timestamp).
+7. Click **Flag delay** on an in-transit shipment, type in a reason when prompted — it's marked `DELAYED` immediately, with that reason visible in its tracking history; click **Advance** again to resume its normal flow. If that shipment has a `recipient_email` on file, check the console (or the real inbox, once SMTP is configured) for the branded notification email that just went out.
+8. Click **Email: On** on a row to mute it, then **Advance** that shipment again — no notification email this time. Click **Email: Off** to turn it back on.
 9. Back on the staff dashboard, click **Run to delivery** on any remaining in-transit shipment. It jumps straight to Delivered, and its public tracking page timeline stops polling (no more `hx-trigger` on the timeline block) once delivered. Click **Rewind** on it — it un-delivers and starts polling again.
+10. Click **Delete** on a shipment you don't need anymore — confirm the prompt, and the row disappears along with its whole tracking history.
 
 ## Project layout
 

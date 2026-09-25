@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import ServiceLevel, Shipment, ShipmentStatus
+from .models import ServiceLevel
 
 
 class ShipmentCreateForm(forms.Form):
@@ -75,58 +75,3 @@ class ShipmentCreateForm(forms.Form):
 
     def route_stops(self):
         return self.cleaned_data.get("route_stops", [])
-
-
-class ScanForm(forms.Form):
-    tracking_number = forms.CharField(max_length=12)
-    event_type = forms.ChoiceField(choices=ShipmentStatus.choices)
-    location = forms.CharField(
-        max_length=255, required=False, label="Location / facility name"
-    )
-    location_note = forms.CharField(max_length=255, required=False)
-    delay_reason = forms.CharField(
-        max_length=255, required=False, label="Delay reason"
-    )
-    signed_by = forms.CharField(
-        max_length=255,
-        required=False,
-        label="Signed by (if delivered in person)",
-        help_text="Who actually took the package, e.g. a neighbor or security "
-        "desk. Leave blank to assume the named recipient signed for it.",
-    )
-    timestamp = forms.DateTimeField(required=False)
-
-    def clean_tracking_number(self):
-        tracking_number = self.cleaned_data["tracking_number"].strip()
-        if not Shipment.objects.filter(tracking_number=tracking_number).exists():
-            raise forms.ValidationError("No shipment with that tracking number.")
-        return tracking_number
-
-    def clean(self):
-        cleaned = super().clean()
-        event_type = cleaned.get("event_type")
-        location = (cleaned.get("location") or "").strip()
-        cleaned["location"] = location
-        if event_type in (
-            ShipmentStatus.ARRIVED_AT_FACILITY,
-            ShipmentStatus.DEPARTED_FACILITY,
-        ) and not location:
-            raise forms.ValidationError(
-                "A location/facility name is required for arrival/departure scans."
-            )
-
-        if event_type == ShipmentStatus.DELAYED and not (cleaned.get("delay_reason") or "").strip():
-            raise forms.ValidationError(
-                "A reason is required when marking a shipment as delayed."
-            )
-
-        tracking_number = cleaned.get("tracking_number")
-        if tracking_number:
-            shipment = Shipment.objects.filter(
-                tracking_number=tracking_number
-            ).first()
-            if shipment and shipment.status == ShipmentStatus.DELIVERED:
-                raise forms.ValidationError(
-                    "This shipment has already been delivered."
-                )
-        return cleaned

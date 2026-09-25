@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from tracking.models import ShipmentStatus
+from tracking.models import Shipment, ShipmentStatus
 from tracking.simulator import run_to_delivery
 from .factories import make_shipment
 
@@ -101,81 +101,6 @@ class StaffViewTests(TestCase):
         response = self.client.get(reverse("staff_dashboard"))
         self.assertEqual(response.status_code, 200)
 
-    def test_valid_scan_creates_event(self):
-        self.client.login(username="staffer", password="pass12345")
-        events_before = self.shipment.events.count()
-        response = self.client.post(
-            reverse("staff_scan"),
-            {
-                "tracking_number": self.shipment.tracking_number,
-                "event_type": ShipmentStatus.PICKED_UP,
-                "location": "",
-                "location_note": "",
-                "delay_reason": "",
-                "timestamp": "",
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.shipment.events.count(), events_before + 1)
-
-    def test_delivery_scan_records_who_actually_signed(self):
-        self.client.login(username="staffer", password="pass12345")
-        response = self.client.post(
-            reverse("staff_scan"),
-            {
-                "tracking_number": self.shipment.tracking_number,
-                "event_type": ShipmentStatus.DELIVERED,
-                "location": "",
-                "location_note": "",
-                "delay_reason": "",
-                "signed_by": "James (security desk)",
-                "timestamp": "",
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        self.shipment.refresh_from_db()
-        self.assertEqual(self.shipment.status, ShipmentStatus.DELIVERED)
-        self.assertEqual(self.shipment.signed_by, "James (security desk)")
-
-    def test_delivery_scan_without_signed_by_defaults_to_recipient(self):
-        self.client.login(username="staffer", password="pass12345")
-        response = self.client.post(
-            reverse("staff_scan"),
-            {
-                "tracking_number": self.shipment.tracking_number,
-                "event_type": ShipmentStatus.DELIVERED,
-                "location": "",
-                "location_note": "",
-                "delay_reason": "",
-                "signed_by": "",
-                "timestamp": "",
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        self.shipment.refresh_from_db()
-        self.assertEqual(
-            self.shipment.signed_by, self.shipment.recipient_name.split(" ")[0]
-        )
-
-    def test_scan_on_delivered_shipment_rejected(self):
-        run_to_delivery(self.shipment)
-        self.client.login(username="staffer", password="pass12345")
-        events_before = self.shipment.events.count()
-        response = self.client.post(
-            reverse("staff_scan"),
-            {
-                "tracking_number": self.shipment.tracking_number,
-                "event_type": ShipmentStatus.PICKED_UP,
-                "location": "",
-                "location_note": "",
-                "delay_reason": "",
-                "timestamp": "",
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.shipment.events.count(), events_before)
-        self.assertContains(response, "already been delivered")
-
     def test_toggle_email_row_flips_the_flag(self):
         self.client.login(username="staffer", password="pass12345")
         self.assertTrue(self.shipment.email_notifications_enabled)
@@ -194,54 +119,6 @@ class StaffViewTests(TestCase):
         self.shipment.refresh_from_db()
         self.assertTrue(self.shipment.email_notifications_enabled)
         self.assertContains(response, "Email: On")
-
-    def test_arrived_scan_requires_location(self):
-        self.client.login(username="staffer", password="pass12345")
-        response = self.client.post(
-            reverse("staff_scan"),
-            {
-                "tracking_number": self.shipment.tracking_number,
-                "event_type": ShipmentStatus.ARRIVED_AT_FACILITY,
-                "location": "",
-                "location_note": "",
-                "delay_reason": "",
-                "timestamp": "",
-            },
-        )
-        self.assertContains(response, "location/facility name is required")
-
-    def test_delayed_scan_requires_reason(self):
-        self.client.login(username="staffer", password="pass12345")
-        response = self.client.post(
-            reverse("staff_scan"),
-            {
-                "tracking_number": self.shipment.tracking_number,
-                "event_type": ShipmentStatus.DELAYED,
-                "location": "",
-                "location_note": "",
-                "delay_reason": "",
-                "timestamp": "",
-            },
-        )
-        self.assertContains(response, "A reason is required")
-
-    def test_delayed_scan_with_reason_creates_event_and_logs_reason(self):
-        self.client.login(username="staffer", password="pass12345")
-        response = self.client.post(
-            reverse("staff_scan"),
-            {
-                "tracking_number": self.shipment.tracking_number,
-                "event_type": ShipmentStatus.DELAYED,
-                "location": "",
-                "location_note": "",
-                "delay_reason": "Truck breakdown",
-                "timestamp": "",
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        self.shipment.refresh_from_db()
-        self.assertEqual(self.shipment.status, ShipmentStatus.DELAYED)
-        self.assertEqual(self.shipment.latest_event().delay_reason, "Truck breakdown")
 
     def test_rewind_row_undoes_latest_event(self):
         self.client.login(username="staffer", password="pass12345")
@@ -341,4 +218,50 @@ class StaffViewTests(TestCase):
         self.assertEqual(
             shipment.route,
             ["Lagos Hub", "Ibadan Hub", "Abuja Hub", "Kaduna Sort Center"],
+        )
+
+    def test_delete_shipment_row_removes_it(self):
+        self.client.login(username="staffer", password="pass12345")
+        pk = self.shipment.pk
+        response = self.client.post(
+            reverse("staff_delete_shipment_row", args=[pk])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"")
+        self.assertFalse(Shipment.objects.filter(pk=pk).exists())
+
+    def test_delete_shipment_row_requires_staff(self):
+        self.client.login(username="regular", password="pass12345")
+        response = self.client.post(
+            reverse("staff_delete_shipment_row", args=[self.shipment.pk])
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Shipment.objects.filter(pk=self.shipment.pk).exists())
+
+
+class PasswordChangeViewTests(TestCase):
+    def setUp(self):
+        self.staff_user = User.objects.create_user(
+            username="staffer", password="oldpass123", is_staff=True
+        )
+
+    def test_requires_login(self):
+        response = self.client.get(reverse("password_change"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/accounts/login/", response.url)
+
+    def test_change_password_logs_in_with_new_password(self):
+        self.client.login(username="staffer", password="oldpass123")
+        response = self.client.post(
+            reverse("password_change"),
+            {
+                "old_password": "oldpass123",
+                "new_password1": "brand-new-pass-456",
+                "new_password2": "brand-new-pass-456",
+            },
+        )
+        self.assertRedirects(response, reverse("password_change_done"))
+        self.client.logout()
+        self.assertTrue(
+            self.client.login(username="staffer", password="brand-new-pass-456")
         )

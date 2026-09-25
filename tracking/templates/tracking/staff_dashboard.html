@@ -1,11 +1,11 @@
 {% extends "tracking/base.html" %}
 {% block title %}Staff Dashboard — Bureau{% endblock %}
 {% block content %}
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-    <h1>Staff Dashboard</h1>
-    <div>
+<div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+    <h1 style="margin:0;">Staff Dashboard</h1>
+    <div class="row-actions">
         <a class="btn" href="{% url 'staff_shipment_new' %}">New shipment</a>
-        <a class="btn secondary" href="{% url 'staff_scan' %}">Manual scan</a>
+        <a class="btn secondary" href="{% url 'password_change' %}">Change password</a>
     </div>
 </div>
 

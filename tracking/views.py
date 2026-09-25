@@ -8,8 +8,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from .forms import ScanForm, ShipmentCreateForm
-from .models import Shipment, ShipmentStatus, TrackingEvent
+from .forms import ShipmentCreateForm
+from .models import Shipment, ShipmentStatus
 from .services import create_shipment
 from .simulator import advance, advance_all, flag_delay, rewind, run_to_delivery
 
@@ -200,36 +200,8 @@ def staff_shipment_new(request):
 
 
 @staff_required
-def staff_scan(request):
-    success = False
-    if request.method == "POST":
-        form = ScanForm(request.POST)
-        if form.is_valid():
-            shipment = Shipment.objects.get(
-                tracking_number=form.cleaned_data["tracking_number"]
-            )
-            kwargs = {
-                "shipment": shipment,
-                "event_type": form.cleaned_data["event_type"],
-                "location": form.cleaned_data["location"],
-                "location_note": form.cleaned_data["location_note"],
-                "delay_reason": form.cleaned_data["delay_reason"],
-                "created_by": request.user,
-            }
-            if form.cleaned_data.get("timestamp"):
-                kwargs["timestamp"] = form.cleaned_data["timestamp"]
-            event = TrackingEvent.objects.create(**kwargs)
-
-            signed_by = form.cleaned_data.get("signed_by")
-            if event.event_type == ShipmentStatus.DELIVERED and signed_by:
-                Shipment.objects.filter(pk=shipment.pk).update(signed_by=signed_by)
-
-            success = True
-            form = ScanForm()
-    else:
-        form = ScanForm()
-
-    context = {"form": form, "success": success}
-    if request.htmx:
-        return render(request, "tracking/partials/scan_form.html", context)
-    return render(request, "tracking/staff_scan.html", context)
+@require_POST
+def staff_delete_shipment_row(request, pk):
+    shipment = get_object_or_404(Shipment, pk=pk)
+    shipment.delete()
+    return HttpResponse("")

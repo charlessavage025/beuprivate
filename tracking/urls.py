@@ -18,7 +18,6 @@ urlpatterns = [
         views.staff_shipment_new,
         name="staff_shipment_new",
     ),
-    path("staff/scan/", views.staff_scan, name="staff_scan"),
     path(
         "staff/shipments/<int:pk>/advance/",
         views.staff_advance_row,
@@ -44,6 +43,11 @@ urlpatterns = [
         views.staff_toggle_email_row,
         name="staff_toggle_email_row",
     ),
+    path(
+        "staff/shipments/<int:pk>/delete/",
+        views.staff_delete_shipment_row,
+        name="staff_delete_shipment_row",
+    ),
     path("staff/advance-all/", views.staff_advance_all, name="staff_advance_all"),
     path(
         "accounts/login/",
@@ -51,4 +55,18 @@ urlpatterns = [
         name="login",
     ),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path(
+        "accounts/password-change/",
+        auth_views.PasswordChangeView.as_view(
+            template_name="tracking/password_change.html"
+        ),
+        name="password_change",
+    ),
+    path(
+        "accounts/password-change/done/",
+        auth_views.PasswordChangeDoneView.as_view(
+            template_name="tracking/password_change_done.html"
+        ),
+        name="password_change_done",
+    ),
 ]

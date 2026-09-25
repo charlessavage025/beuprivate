@@ -38,6 +38,10 @@ CSRF_TRUSTED_ORIGINS = [
     if o.strip()
 ]
 
+# Django admin is served at /<ADMIN_URL>/ instead of the guessable /admin/ —
+# override via env var if you want a different obscure path per deploy.
+ADMIN_URL = os.environ.get("ADMIN_URL", "staff-a044f23eaa1d9efe")
+
 # Render (and most PaaS hosts) terminate TLS at a proxy and forward requests
 # to the app over plain HTTP, tagging the original scheme in this header —
 # without it, request.is_secure() is always False behind the proxy, which
