@@ -144,6 +144,15 @@ def staff_flag_delay_row(request, pk):
 
 @staff_required
 @require_POST
+def staff_toggle_email_row(request, pk):
+    shipment = get_object_or_404(Shipment, pk=pk)
+    shipment.email_notifications_enabled = not shipment.email_notifications_enabled
+    shipment.save(update_fields=["email_notifications_enabled"])
+    return render(request, "tracking/partials/shipment_row.html", {"shipment": shipment})
+
+
+@staff_required
+@require_POST
 def staff_advance_all(request):
     advance_all()
     status = request.GET.get("status", "")

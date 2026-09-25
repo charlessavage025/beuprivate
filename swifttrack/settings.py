@@ -51,6 +51,29 @@ if not DEBUG:
 SIM_DELAY_RATE = float(os.environ.get("SIM_DELAY_RATE", "0.05"))
 
 
+# Email (shipment update notifications)
+# Leave EMAIL_HOST unset to just print emails to the console instead of
+# sending them — no SMTP credentials needed for local dev.
+
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+
+if EMAIL_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+    # Use EMAIL_USE_SSL=True + port 465 instead if your network blocks the
+    # port 587 STARTTLS submission port (some ISPs/sandboxes do).
+    EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", False)
+    EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", not EMAIL_USE_SSL)
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DEFAULT_FROM_EMAIL", "Bureau Private Delivery Company <notifications@bureauprivate.example>"
+)
+
+
 # Application definition
 
 INSTALLED_APPS = [

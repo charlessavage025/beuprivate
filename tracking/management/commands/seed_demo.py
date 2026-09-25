@@ -71,7 +71,7 @@ class Command(BaseCommand):
 
     def _random_address_fields(self, prefix, fake):
         city, state = random.choice(NIGERIAN_STATES_CITIES)
-        return {
+        fields = {
             f"{prefix}_name": fake.name(),
             f"{prefix}_phone": f"+234{random.randint(700, 909)}{random.randint(1000000, 9999999)}",
             f"{prefix}_line1": fake.street_address(),
@@ -80,6 +80,9 @@ class Command(BaseCommand):
             f"{prefix}_postal_code": str(random.randint(100000, 109999)),
             f"{prefix}_country": "Nigeria",
         }
+        if prefix == "recipient":
+            fields["recipient_email"] = fake.email()
+        return fields
 
     def _create_random_shipment(self, fake):
         origin, destination = random.sample(SAMPLE_WAYPOINT_NAMES, 2)

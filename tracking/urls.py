@@ -39,6 +39,11 @@ urlpatterns = [
         views.staff_flag_delay_row,
         name="staff_flag_delay_row",
     ),
+    path(
+        "staff/shipments/<int:pk>/toggle-email/",
+        views.staff_toggle_email_row,
+        name="staff_toggle_email_row",
+    ),
     path("staff/advance-all/", views.staff_advance_all, name="staff_advance_all"),
     path(
         "accounts/login/",

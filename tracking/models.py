@@ -6,6 +6,8 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils import timezone
 
+from .notifications import send_event_notification_email
+
 
 class ShipmentStatus(models.TextChoices):
     LABEL_CREATED = "LABEL_CREATED", "Label Created"
@@ -57,6 +59,9 @@ class Shipment(models.Model):
     recipient_name = models.CharField(max_length=255)
     recipient_phone = models.CharField(max_length=32)
     recipient_email = models.EmailField(blank=True)
+    # Staff-controlled per shipment from the dashboard — lets a shipment's
+    # email updates be muted without touching the recipient's address on file.
+    email_notifications_enabled = models.BooleanField(default=True)
     recipient_line1 = models.CharField(max_length=255)
     recipient_line2 = models.CharField(max_length=255, blank=True)
     recipient_city = models.CharField(max_length=128)
@@ -189,9 +194,13 @@ class TrackingEvent(models.Model):
             else:
                 self.description = base
 
+        is_new = self._state.adding
+
         with transaction.atomic():
             super().save(*args, **kwargs)
             _recompute_shipment_status(self.shipment_id)
+            if is_new:
+                transaction.on_commit(lambda: send_event_notification_email(self))
 
 
 def _recompute_shipment_status(shipment_id):

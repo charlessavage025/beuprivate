@@ -176,6 +176,25 @@ class StaffViewTests(TestCase):
         self.assertEqual(self.shipment.events.count(), events_before)
         self.assertContains(response, "already been delivered")
 
+    def test_toggle_email_row_flips_the_flag(self):
+        self.client.login(username="staffer", password="pass12345")
+        self.assertTrue(self.shipment.email_notifications_enabled)
+
+        response = self.client.post(
+            reverse("staff_toggle_email_row", args=[self.shipment.pk])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.shipment.refresh_from_db()
+        self.assertFalse(self.shipment.email_notifications_enabled)
+        self.assertContains(response, "Email: Off")
+
+        response = self.client.post(
+            reverse("staff_toggle_email_row", args=[self.shipment.pk])
+        )
+        self.shipment.refresh_from_db()
+        self.assertTrue(self.shipment.email_notifications_enabled)
+        self.assertContains(response, "Email: On")
+
     def test_arrived_scan_requires_location(self):
         self.client.login(username="staffer", password="pass12345")
         response = self.client.post(
