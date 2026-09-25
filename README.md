@@ -79,6 +79,55 @@ Staff-only pages (`/staff/...`) require a logged-in user with `is_staff=True`. L
 python manage.py test
 ```
 
+## Deploying (Render + Neon)
+
+The app is ready to deploy as-is: `dj-database-url` + `psycopg2-binary` handle
+Postgres, `whitenoise` serves static files (no separate CDN/static host
+needed), and `gunicorn` is the production server.
+
+**1. Database — [Neon](https://neon.tech) (free Postgres)**
+
+1. Create a Neon project. Copy the connection string from the dashboard —
+   it already includes `?sslmode=require`, e.g.:
+   `postgresql://user:password@ep-xxxx-pooler.region.aws.neon.tech/dbname?sslmode=require`
+2. Keep it handy for the `DATABASE_URL` env var below.
+
+**2. Web service — [Render](https://render.com) (free tier)**
+
+Either use the included `render.yaml` Blueprint (New → Blueprint, point it at
+this repo — it wires up the build/start commands and generates `SECRET_KEY`
+for you), or configure a Web Service manually with:
+
+- Build command: `pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate`
+- Start command: `gunicorn swifttrack.wsgi:application`
+
+Either way, set these environment variables on the service:
+
+| Variable | Value |
+|---|---|
+| `SECRET_KEY` | a random secret (Render's Blueprint generates this automatically) |
+| `DEBUG` | `False` |
+| `DATABASE_URL` | the Neon connection string from step 1 |
+| `ALLOWED_HOSTS` | `your-app.onrender.com` |
+| `CSRF_TRUSTED_ORIGINS` | `https://your-app.onrender.com` |
+
+Render assigns the `onrender.com` subdomain on first deploy — after that
+first deploy, go back and fill in `ALLOWED_HOSTS`/`CSRF_TRUSTED_ORIGINS` with
+the real hostname and redeploy.
+
+**3. First-time data**
+
+Render's shell (or a one-off job) lets you run management commands against
+the deployed app, same as locally:
+
+```bash
+python manage.py seed_demo
+```
+
+Note: Render's free web service spins down after periods of inactivity, so
+the first request after idling will be slow (cold start) — expected on the
+free tier, not a bug.
+
 ## 2-minute demo script
 
 1. Run `python manage.py seed_demo` and note the three sample tracking numbers it prints.
