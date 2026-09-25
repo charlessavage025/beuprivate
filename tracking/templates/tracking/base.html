@@ -104,15 +104,41 @@
         .uthao-nav-logo {
             justify-self: start;
             display: flex;
-            gap: 0.4rem;
+            align-items: center;
+            gap: 0.6rem;
             white-space: nowrap;
-            font-weight: 700;
-            font-size: 1rem;
-            letter-spacing: -0.02em;
             text-decoration: none;
         }
-        .uthao-nav-logo .word-1 { color: #fff; }
-        .uthao-nav-logo .word-2 { color: var(--gold); }
+        .uthao-logo-mark {
+            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px;
+            border-radius: 8px;
+            background: var(--orange);
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.95rem;
+            letter-spacing: 0;
+        }
+        .uthao-logo-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
+        }
+        .uthao-logo-name {
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
+        }
+        .uthao-logo-tag {
+            margin-top: 3px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+            font-size: 0.58rem;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+        }
         .uthao-nav-links {
             grid-column: 2;
             justify-self: center;
@@ -291,8 +317,12 @@
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="{% block body_class %}{% endblock %}">
     {% block header %}
     <header class="uthao-nav">
-        <a class="uthao-nav-logo" href="{% url 'index' %}">
-            <span class="word-1">Bureau</span><span class="word-2">Private</span>
+        <a class="uthao-nav-logo" href="{% url 'index' %}" aria-label="Bureau Private Delivery Company — home">
+            <span class="uthao-logo-mark" aria-hidden="true">B</span>
+            <span class="uthao-logo-text">
+                <span class="uthao-logo-name">Bureau</span>
+                <span class="uthao-logo-tag">Private Delivery</span>
+            </span>
         </a>
 
         <nav class="uthao-nav-links" aria-label="Primary">

@@ -28,6 +28,49 @@
     </div>
 </section>
 
+<section class="bp-section bp-process">
+    <div class="bp-section-head">
+        <span class="bp-eyebrow">How it moves</span>
+        <h2>Every scan, logged the moment it happens</h2>
+        <p>No black box. A shipment only advances when someone actually scans it — pickup, hub arrival, hub departure, out for delivery, signed for. Each step lands on the tracking page in real time, and you'll get an email the moment it does.</p>
+    </div>
+    <ol class="bp-pipeline">
+        <li><span class="bp-pipeline-dot"></span><span class="bp-pipeline-label">Label created</span></li>
+        <li><span class="bp-pipeline-dot"></span><span class="bp-pipeline-label">Picked up</span></li>
+        <li><span class="bp-pipeline-dot"></span><span class="bp-pipeline-label">At hub</span></li>
+        <li><span class="bp-pipeline-dot"></span><span class="bp-pipeline-label">Departed hub</span></li>
+        <li><span class="bp-pipeline-dot"></span><span class="bp-pipeline-label">Out for delivery</span></li>
+        <li><span class="bp-pipeline-dot bp-pipeline-dot--final"></span><span class="bp-pipeline-label">Delivered</span></li>
+    </ol>
+</section>
+
+<section class="bp-section bp-services">
+    <div class="bp-section-head">
+        <span class="bp-eyebrow">Service levels</span>
+        <h2>Pick the pace that fits</h2>
+    </div>
+    <div class="bp-services-grid">
+        <article class="bp-service-card">
+            <span class="bp-service-num">01</span>
+            <h3>Overnight</h3>
+            <p class="bp-service-eta">Next-day delivery</p>
+            <p>For the shipment that can't wait — picked up today, on the recipient's doorstep tomorrow.</p>
+        </article>
+        <article class="bp-service-card">
+            <span class="bp-service-num">02</span>
+            <h3>Express</h3>
+            <p class="bp-service-eta">2-day delivery</p>
+            <p>A fast, dependable middle ground for time-sensitive orders that don't need overnight pricing.</p>
+        </article>
+        <article class="bp-service-card">
+            <span class="bp-service-num">03</span>
+            <h3>Ground</h3>
+            <p class="bp-service-eta">4-day delivery</p>
+            <p>Economical, scheduled delivery for shipments with more flexible timing.</p>
+        </article>
+    </div>
+</section>
+
 <style>
     /* ---- Hero ---- */
     .uthao-hero {
@@ -154,6 +197,122 @@
         }
         .uthao-hero-content h1 { margin-bottom: 1.15rem; }
         .uthao-hero-content p { margin-bottom: 2rem; }
+    }
+
+    /* ---- Homepage content sections ---- */
+    .bp-section {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 3.5rem 1.5rem;
+    }
+    .bp-section-head {
+        max-width: 640px;
+        margin: 0 auto 2.75rem;
+        text-align: center;
+    }
+    .bp-eyebrow {
+        display: inline-block;
+        color: var(--orange);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.65rem;
+    }
+    .bp-section-head h2 {
+        font-size: clamp(1.4rem, 3.5vw, 1.85rem);
+        letter-spacing: -0.01em;
+        margin: 0 0 0.75rem;
+    }
+    .bp-section-head p {
+        color: var(--gray-700);
+        font-size: 0.95rem;
+        line-height: 1.65;
+        margin: 0;
+    }
+
+    /* Process pipeline */
+    .bp-pipeline {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .bp-pipeline li {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.5rem 1.25rem;
+    }
+    .bp-pipeline li:not(:last-child)::after {
+        content: "";
+        width: 2.5rem;
+        height: 1px;
+        background: var(--gray-300);
+        margin-left: 1.25rem;
+        flex-shrink: 0;
+    }
+    .bp-pipeline-dot {
+        width: 9px; height: 9px;
+        border-radius: 50%;
+        background: var(--gray-300);
+        flex-shrink: 0;
+    }
+    .bp-pipeline-dot--final { background: var(--orange); }
+    .bp-pipeline-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        white-space: nowrap;
+    }
+
+    /* Service levels */
+    .bp-services-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+    .bp-service-card {
+        border-top: 2px solid var(--gray-200);
+        padding-top: 1.25rem;
+    }
+    .bp-service-num {
+        display: block;
+        font-size: 1.85rem;
+        font-weight: 300;
+        color: var(--orange);
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+    }
+    .bp-service-card h3 {
+        margin: 0 0 0.2rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        text-transform: none;
+        color: var(--text);
+    }
+    .bp-service-eta {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--gray-500);
+        margin: 0 0 0.75rem;
+    }
+    .bp-service-card p:last-child {
+        font-size: 0.88rem;
+        line-height: 1.6;
+        color: var(--gray-700);
+        margin: 0;
+    }
+
+    @media (max-width: 720px) {
+        .bp-services-grid { grid-template-columns: 1fr; gap: 1.75rem; }
+        .bp-pipeline li { padding: 0.5rem 0.75rem; }
+        .bp-pipeline li:not(:last-child)::after { width: 1.25rem; margin-left: 0.75rem; }
     }
 </style>
 {% endblock %}
