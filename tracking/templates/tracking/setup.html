@@ -1,0 +1,47 @@
+{% extends "tracking/base.html" %}
+{% block title %}Setup — Bureau{% endblock %}
+{% block content %}
+<div class="card" style="max-width:480px; margin:2rem auto;">
+    <h1>Create superuser</h1>
+    <p class="muted" style="margin-top:-0.5rem;">No shell access needed — this page is gated by a secret token in the URL.</p>
+
+    {% if superuser_result %}
+        <div class="success-msg">{{ superuser_result }}</div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="token" value="{{ token }}">
+        <input type="hidden" name="action" value="create_superuser">
+        <div class="field">
+            <label for="su-username">Username</label>
+            <input type="text" id="su-username" name="username" required>
+        </div>
+        <div class="field">
+            <label for="su-email">Email</label>
+            <input type="email" id="su-email" name="email">
+        </div>
+        <div class="field">
+            <label for="su-password">Password</label>
+            <input type="password" id="su-password" name="password" required>
+        </div>
+        <button class="btn" type="submit">Create superuser</button>
+    </form>
+</div>
+
+<div class="card" style="max-width:480px; margin:2rem auto;">
+    <h1>Seed demo data</h1>
+    <p class="muted" style="margin-top:-0.5rem;">Runs <code>python manage.py seed_demo</code> — creates the <code>admin</code>/<code>admin123</code> superuser (if missing) plus 20 sample shipments.</p>
+
+    {% if seed_result %}
+        <div class="success-msg" style="display:block; white-space:pre-wrap; font-family:monospace; font-size:0.8rem;">{{ seed_result }}</div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="token" value="{{ token }}">
+        <input type="hidden" name="action" value="seed_demo">
+        <button class="btn secondary" type="submit">Run seed_demo</button>
+    </form>
+</div>
+{% endblock %}

@@ -265,3 +265,50 @@ class PasswordChangeViewTests(TestCase):
         self.assertTrue(
             self.client.login(username="staffer", password="brand-new-pass-456")
         )
+
+
+class SetupPageTests(TestCase):
+    def test_404s_when_token_not_configured(self):
+        response = self.client.get(reverse("setup_page"), {"token": "anything"})
+        self.assertEqual(response.status_code, 404)
+
+    @override_settings(SETUP_TOKEN="right-token")
+    def test_404s_with_wrong_token(self):
+        response = self.client.get(reverse("setup_page"), {"token": "wrong-token"})
+        self.assertEqual(response.status_code, 404)
+
+    @override_settings(SETUP_TOKEN="right-token")
+    def test_loads_with_correct_token(self):
+        response = self.client.get(reverse("setup_page"), {"token": "right-token"})
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(SETUP_TOKEN="right-token")
+    def test_creates_superuser(self):
+        response = self.client.post(
+            reverse("setup_page"),
+            {
+                "token": "right-token",
+                "action": "create_superuser",
+                "username": "newadmin",
+                "email": "newadmin@example.com",
+                "password": "somepassword123",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        user = User.objects.get(username="newadmin")
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.is_staff)
+
+    @override_settings(SETUP_TOKEN="right-token")
+    def test_wont_overwrite_existing_username(self):
+        User.objects.create_user(username="taken", password="x")
+        response = self.client.post(
+            reverse("setup_page"),
+            {
+                "token": "right-token",
+                "action": "create_superuser",
+                "username": "taken",
+                "password": "somepassword123",
+            },
+        )
+        self.assertContains(response, "already exists")

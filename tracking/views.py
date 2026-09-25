@@ -1,9 +1,14 @@
+import hmac
+import io
 from functools import wraps
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.management import call_command
 from django.db.models import Count
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -205,3 +210,51 @@ def staff_delete_shipment_row(request, pk):
     shipment = get_object_or_404(Shipment, pk=pk)
     shipment.delete()
     return HttpResponse("")
+
+
+def setup_page(request):
+    """Token-gated page for creating a superuser or running seed_demo without
+    shell access (e.g. on Render's free tier). 404s entirely unless
+    SETUP_TOKEN is configured and the request supplies a matching token."""
+    if not settings.SETUP_TOKEN:
+        raise Http404()
+
+    token = request.POST.get("token") or request.GET.get("token") or ""
+    if not hmac.compare_digest(token, settings.SETUP_TOKEN):
+        raise Http404()
+
+    superuser_result = None
+    seed_result = None
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "create_superuser":
+            username = request.POST.get("username", "").strip()
+            email = request.POST.get("email", "").strip()
+            password = request.POST.get("password", "")
+            User = get_user_model()
+            if not username or not password:
+                superuser_result = "Username and password are required."
+            elif User.objects.filter(username=username).exists():
+                superuser_result = f"A user named '{username}' already exists."
+            else:
+                User.objects.create_superuser(
+                    username=username, email=email, password=password
+                )
+                superuser_result = f"Superuser '{username}' created — you can log in now."
+
+        elif action == "seed_demo":
+            out = io.StringIO()
+            call_command("seed_demo", stdout=out)
+            seed_result = out.getvalue()
+
+    return render(
+        request,
+        "tracking/setup.html",
+        {
+            "token": token,
+            "superuser_result": superuser_result,
+            "seed_result": seed_result,
+        },
+    )
