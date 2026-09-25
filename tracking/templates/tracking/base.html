@@ -300,6 +300,7 @@
         .messages li { padding: 0.65rem 0.9rem; border-radius: var(--radius-sm); background: var(--success-bg); color: var(--success); margin-bottom: 0.5rem; font-size: 0.88rem; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .field { margin-bottom: 0.9rem; display: flex; flex-direction: column; gap: 0.3rem; }
+        .field[hidden] { display: none; }
         .field label { font-size: 0.8rem; font-weight: 600; color: var(--gray-700); }
         .field .muted { font-size: 0.78rem; }
         .filters { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
@@ -312,6 +313,22 @@
             main { padding: 1.25rem 1rem 2rem; }
             .card { padding: 1.1rem; }
         }
+
+        /* ---- Date/time picker modal, shared across pages ---- */
+        dialog.dt-modal {
+            border: none;
+            padding: 0;
+            width: 100%;
+            max-width: 340px;
+            background: var(--card);
+            color: var(--text);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+        }
+        dialog.dt-modal::backdrop { background: rgba(15, 12, 10, 0.5); }
+        .dt-modal-form { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        .dt-modal-form h3 { margin: 0; text-transform: none; letter-spacing: normal; font-size: 1.05rem; color: var(--text); }
+        .dt-modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.25rem; }
     </style>
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="{% block body_class %}{% endblock %}">
@@ -350,5 +367,116 @@
         <p class="uthao-footer-copy">&copy; {% now "Y" %} Bureau Private Delivery Company. All rights reserved.</p>
     </footer>
     {% endblock %}
+
+    <dialog id="dt-modal" class="dt-modal">
+        <form id="dt-modal-form" class="dt-modal-form">
+            <h3 id="dt-modal-title">Set date &amp; time</h3>
+            <div class="field">
+                <label for="dt-modal-input">Date &amp; time</label>
+                <input type="datetime-local" id="dt-modal-input" required>
+            </div>
+            <div class="field" id="dt-modal-reason-field" hidden>
+                <label for="dt-modal-reason">Reason</label>
+                <textarea id="dt-modal-reason" rows="2" placeholder="What's the reason for this delay?"></textarea>
+            </div>
+            <div class="dt-modal-actions">
+                <button type="button" class="btn secondary" id="dt-modal-cancel">Cancel</button>
+                <button type="submit" class="btn accent">Confirm</button>
+            </div>
+        </form>
+    </dialog>
+    <script>
+        (function () {
+            var modal = document.getElementById("dt-modal");
+            var form = document.getElementById("dt-modal-form");
+            var input = document.getElementById("dt-modal-input");
+            var reasonField = document.getElementById("dt-modal-reason-field");
+            var reasonInput = document.getElementById("dt-modal-reason");
+            var titleEl = document.getElementById("dt-modal-title");
+            var cancelBtn = document.getElementById("dt-modal-cancel");
+            var onConfirm = null;
+
+            function pad(n) { return String(n).padStart(2, "0"); }
+
+            function nowLocalValue() {
+                var d = new Date();
+                return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate())
+                    + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+            }
+
+            // options: { title, defaultValue, showReason, defaultReason, onConfirm({value, reason}) }
+            window.openDateTimeModal = function (options) {
+                options = options || {};
+                titleEl.textContent = options.title || "Set date & time";
+                input.value = options.defaultValue || nowLocalValue();
+                if (options.showReason) {
+                    reasonField.hidden = false;
+                    reasonInput.value = options.defaultReason || "";
+                } else {
+                    reasonField.hidden = true;
+                    reasonInput.value = "";
+                }
+                onConfirm = options.onConfirm || null;
+                if (typeof modal.showModal === "function") {
+                    modal.showModal();
+                } else {
+                    modal.setAttribute("open", "open");
+                }
+                input.focus();
+            };
+
+            cancelBtn.addEventListener("click", function () {
+                onConfirm = null;
+                modal.close();
+            });
+
+            form.addEventListener("submit", function (evt) {
+                evt.preventDefault();
+                var callback = onConfirm;
+                onConfirm = null;
+                modal.close();
+                if (callback) {
+                    callback({ value: input.value, reason: reasonInput.value });
+                }
+            });
+
+            // Any hx-* trigger carrying data-dt-modal pauses its request,
+            // collects a date/time (and optional reason) in the modal, then
+            // resumes the request with those values added. htmx:confirm's
+            // detail has no "parameters" to write to, so the picked values
+            // are stashed here and merged in on htmx:configRequest instead,
+            // which fires right as the (now-resumed) request is built.
+            var dtPendingValues = new WeakMap();
+
+            document.body.addEventListener("htmx:confirm", function (evt) {
+                var trigger = evt.detail.elt;
+                if (!trigger || !trigger.hasAttribute("data-dt-modal")) return;
+                evt.preventDefault();
+                var showReason = trigger.hasAttribute("data-dt-reason");
+                openDateTimeModal({
+                    title: trigger.getAttribute("data-dt-title") || "Set date & time",
+                    showReason: showReason,
+                    onConfirm: function (result) {
+                        dtPendingValues.set(trigger, {
+                            timestamp: result.value,
+                            reason: showReason ? result.reason : undefined
+                        });
+                        evt.detail.issueRequest(true);
+                    }
+                });
+            });
+
+            document.body.addEventListener("htmx:configRequest", function (evt) {
+                var trigger = evt.detail.elt;
+                var values = trigger && dtPendingValues.get(trigger);
+                if (!values) return;
+                dtPendingValues.delete(trigger);
+                evt.detail.parameters.timestamp = values.timestamp;
+                if (values.reason !== undefined) {
+                    evt.detail.parameters.reason = values.reason;
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

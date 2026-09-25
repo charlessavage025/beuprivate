@@ -13,7 +13,9 @@
             {% if shipment.status != "DELIVERED" %}
                 <button class="btn small" title="{% if shipment.status == 'DELAYED' %}Resume from delay{% else %}Advance one step{% endif %}"
                         hx-post="{% url 'staff_advance_row' shipment.pk %}"
-                        hx-target="#shipment-row-{{ shipment.pk }}" hx-swap="outerHTML">
+                        hx-target="#shipment-row-{{ shipment.pk }}" hx-swap="outerHTML"
+                        data-dt-modal
+                        data-dt-title="{% if shipment.status == 'DELAYED' %}Resume from delay — set date &amp; time{% else %}Advance shipment — set date &amp; time{% endif %}">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
                     {% if shipment.status == "DELAYED" %}Resume{% else %}Advance{% endif %}
                 </button>
@@ -26,8 +28,10 @@
                 {% if shipment.status != "DELAYED" %}
                     <button class="btn small warning" title="Flag this shipment as delayed"
                             hx-post="{% url 'staff_flag_delay_row' shipment.pk %}"
-                            hx-prompt="What's the reason for this delay?"
-                            hx-target="#shipment-row-{{ shipment.pk }}" hx-swap="outerHTML">
+                            hx-target="#shipment-row-{{ shipment.pk }}" hx-swap="outerHTML"
+                            data-dt-modal
+                            data-dt-title="Flag delay — set date &amp; time"
+                            data-dt-reason>
                         <svg class="icon" viewBox="0 0 24 24"><path d="M12 8v5"/><path d="M12 16.5h.01"/><circle cx="12" cy="12" r="9"/></svg>
                         Flag delay
                     </button>

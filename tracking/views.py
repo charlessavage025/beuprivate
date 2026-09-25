@@ -6,6 +6,8 @@ from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_POST
 
 from .forms import ShipmentCreateForm
@@ -23,6 +25,20 @@ def staff_required(view_func):
         return view_func(request, *args, **kwargs)
 
     return wrapper
+
+
+def _parse_posted_timestamp(request):
+    """The date/time modal posts a naive "YYYY-MM-DDTHH:MM" value (browser
+    datetime-local); interpret it in the server's local timezone."""
+    raw = (request.POST.get("timestamp") or "").strip()
+    if not raw:
+        return None
+    parsed = parse_datetime(raw)
+    if parsed is None:
+        return None
+    if timezone.is_naive(parsed):
+        parsed = timezone.make_aware(parsed)
+    return parsed
 
 
 def build_track_context(shipment):
@@ -110,7 +126,7 @@ def staff_dashboard(request):
 @require_POST
 def staff_advance_row(request, pk):
     shipment = get_object_or_404(Shipment, pk=pk)
-    advance(shipment)
+    advance(shipment, timestamp=_parse_posted_timestamp(request))
     shipment.refresh_from_db()
     return render(request, "tracking/partials/shipment_row.html", {"shipment": shipment})
 
@@ -136,8 +152,8 @@ def staff_rewind_row(request, pk):
 @require_POST
 def staff_flag_delay_row(request, pk):
     shipment = get_object_or_404(Shipment, pk=pk)
-    reason = request.htmx.prompt or ""
-    flag_delay(shipment, reason=reason)
+    reason = request.POST.get("reason", "")
+    flag_delay(shipment, reason=reason, timestamp=_parse_posted_timestamp(request))
     shipment.refresh_from_db()
     return render(request, "tracking/partials/shipment_row.html", {"shipment": shipment})
 

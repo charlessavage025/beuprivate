@@ -47,6 +47,14 @@ def _next_timestamp(prev_ts):
     return candidate
 
 
+def _clamp_after(ts, prev_ts):
+    """Keep a staff-picked timestamp strictly after the previous event's, so
+    ordering (and the status-recompute that relies on it) stays consistent."""
+    if ts <= prev_ts:
+        return prev_ts + timedelta(seconds=1)
+    return ts
+
+
 def _next_route_location(route, current_location, visited_locations):
     """Location name to arrive at next, handling off-route recovery."""
     if current_location in route:
@@ -113,7 +121,10 @@ def _compute_next_step(shipment, reference_event):
 
 
 @transaction.atomic
-def advance(shipment: Shipment):
+def advance(shipment: Shipment, timestamp=None):
+    """timestamp, if given, overrides the auto-computed time for the new
+    event (staff-picked via the date/time modal); it's clamped to land after
+    the previous event so ordering stays consistent."""
     shipment = Shipment.objects.select_for_update().get(pk=shipment.pk)
 
     latest = shipment.events.order_by("-timestamp", "-id").first()
@@ -121,6 +132,7 @@ def advance(shipment: Shipment):
         return None
 
     delay_rate = getattr(settings, "SIM_DELAY_RATE", 0.05)
+    new_ts = _clamp_after(timestamp, latest.timestamp) if timestamp else _next_timestamp(latest.timestamp)
 
     if latest.event_type == ShipmentStatus.DELAYED:
         reference = (
@@ -133,7 +145,6 @@ def advance(shipment: Shipment):
         step = _compute_next_step(shipment, reference)
     else:
         if random.random() < delay_rate:
-            new_ts = _next_timestamp(latest.timestamp)
             return TrackingEvent.objects.create(
                 shipment=shipment,
                 event_type=ShipmentStatus.DELAYED,
@@ -142,8 +153,6 @@ def advance(shipment: Shipment):
                 timestamp=new_ts,
             )
         step = _compute_next_step(shipment, latest)
-
-    new_ts = _next_timestamp(latest.timestamp)
 
     return TrackingEvent.objects.create(
         shipment=shipment,
@@ -169,15 +178,20 @@ def rewind(shipment: Shipment):
 
 
 @transaction.atomic
-def flag_delay(shipment: Shipment, reason=""):
+def flag_delay(shipment: Shipment, reason="", timestamp=None):
     """Manually mark a shipment as DELAYED, independent of the random delay
     advance() sometimes rolls on its own. A later advance() call resumes the
-    normal flow from wherever the shipment was before this."""
+    normal flow from wherever the shipment was before this. timestamp, if
+    given, overrides the auto-computed time (staff-picked via the date/time
+    modal)."""
     shipment = Shipment.objects.select_for_update().get(pk=shipment.pk)
     latest = shipment.events.order_by("-timestamp", "-id").first()
     if latest is not None and latest.event_type == ShipmentStatus.DELIVERED:
         return None
-    new_ts = _next_timestamp(latest.timestamp) if latest else timezone.now()
+    if timestamp:
+        new_ts = _clamp_after(timestamp, latest.timestamp) if latest else timestamp
+    else:
+        new_ts = _next_timestamp(latest.timestamp) if latest else timezone.now()
     return TrackingEvent.objects.create(
         shipment=shipment,
         event_type=ShipmentStatus.DELAYED,
